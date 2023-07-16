@@ -1,0 +1,65 @@
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/simple-peer/simplepeer.min.js"></script>
+
+</head>
+  <body>
+    <div id="app">
+  <h1>Walkie Talkie App</h1>
+  <button @click="toggleAudio">Toggle Audio</button>
+</div>
+
+  </body>
+  <script>
+  
+  const app = new Vue({
+    el: '#app',
+    data: {
+      audioStream: null,
+      isAudioEnabled: false,
+      peer: null
+    },
+    methods: {
+      initializePeer() {
+        this.peer = new SimplePeer({ initiator: location.hash === '#init' });
+        
+        // Handle incoming data
+        this.peer.on('data', data => {
+          // Process incoming data
+          console.log('Received data:', data);
+        });
+
+        // Handle errors
+        this.peer.on('error', error => {
+          console.error('Peer error:', error);
+        });
+      },
+      toggleAudio() {
+        if (!this.isAudioEnabled) {
+          // Enable audio
+          navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+              this.audioStream = stream;
+              this.peer.addStream(stream);
+            })
+            .catch(error => {
+              console.error('Error accessing audio stream:', error);
+            });
+        } else {
+          // Disable audio
+          this.audioStream.getTracks().forEach(track => track.stop());
+          this.audioStream = null;
+          this.peer.removeStream();
+        }
+        
+        this.isAudioEnabled = !this.isAudioEnabled;
+      }
+    },
+    mounted() {
+      this.initializePeer();
+    }
+  });
+  
+  </script>
+</html>
